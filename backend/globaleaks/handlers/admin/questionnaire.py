@@ -9,6 +9,7 @@ from globaleaks.models import fill_localized_keys
 from globaleaks.orm import db_add, db_del, db_get, transact, tw
 from globaleaks.rest import requests
 from globaleaks.utils.utility import datetime_now, uuid4
+from globaleaks.utils.sf_gl_mapping import get_client_mapping, get_issue_mapping
 
 
 def db_get_questionnaires(session, tid, language):
@@ -251,3 +252,22 @@ class QuestionnareDuplication(BaseHandler):
         return duplicate_questionnaire(self.request.tid,
                                        request['questionnaire_id'],
                                        request['new_name'])
+
+
+class SalesforceMappingCollection(BaseHandler):
+    check_roles = 'admin'
+    invalidate_cache = True
+
+    def get(self):
+        """
+        Return all the salesforce mapping.
+        """
+        client_mapping = {
+            sf_field_id: {'gl_qid': gl_question.get('gl_qid'), 'options': gl_question.get('options')}
+            for sf_field_id, gl_question in get_client_mapping().items()
+        }
+        issue_mapping = {
+            sf_field_id: {'gl_qid': gl_question.get('gl_qid'), 'options': gl_question.get('options')}
+            for sf_field_id, gl_question in get_issue_mapping().items()
+        }
+        return {'client_mapping': client_mapping, 'issue_mapping': issue_mapping}

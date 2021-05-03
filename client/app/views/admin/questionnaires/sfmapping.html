@@ -1,0 +1,72 @@
+<div class="row" data-ng-controller="AdminSalesForceMappingCtrl">
+    <div class="col-md-12">
+        <div class="table-responsive" style="margin-bottom: 20px">
+            <h1 class="text-center">Client Mapping</h1>
+            <table class="table table-bordered" style="white-space: nowrap;">
+                <thead>
+                <tr>
+                    <th ng-repeat="header in headers">
+                        {{ header }}
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="(sf_id, gl_qid) in client_mapping">
+                    <td>{{ sf_id }}</td>
+                    <td style="user-select: all; cursor: pointer;">{{ gl_qid.gl_qid }}</td>
+                    <td>
+                        <table class="table table-bordered" ng-if="gl_qid.options">
+                            <thead>
+                            <tr>
+                                <th>GL Option ID</th>
+                                <th>SalesForce Picklist Value</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="(id, value) in gl_qid.options">
+                                <td style="user-select: all; cursor: pointer;">{{id}}</td>
+                                <td>{{value}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-responsive" style="margin-top: 20px">
+            <h1 class="text-center">Issue Mapping</h1>
+            <table class="table  table-bordered" style="white-space: nowrap;">
+                <thead>
+                <tr>
+                    <th ng-repeat="header in headers">
+                        {{ header }}
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="(sf_id, gl_qid) in issue_mapping">
+                    <td>{{ sf_id }}</td>
+                    <td style="user-select: all; cursor: pointer;">{{ gl_qid.gl_qid }}</td>
+                    <td>
+                        <table class="table table-bordered" ng-if="gl_qid.options">
+                            <thead>
+                            <tr>
+                                <th>GL Option ID</th>
+                                <th>SalesForce Picklist Value</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="(id, value) in gl_qid.options">
+                                <td style="user-select: all; cursor: pointer;">{{id}}</td>
+                                <td>{{value}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

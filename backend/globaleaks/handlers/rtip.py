@@ -2,6 +2,7 @@
 #
 # Handlers dealing with tip interface for receivers (rtip)
 import base64
+import json
 import os
 
 from twisted.internet.threads import deferToThread
@@ -17,7 +18,7 @@ from globaleaks.handlers.operation import OperationHandler
 from globaleaks.handlers.submission import serialize_usertip, decrypt_tip
 from globaleaks.handlers.user import user_serialize_user
 from globaleaks.models import serializers
-from globaleaks.orm import db_get, db_del, transact
+from globaleaks.orm import db_get, db_del, get_session, transact
 from globaleaks.rest import errors, requests
 from globaleaks.settings import Settings
 from globaleaks.state import State
@@ -26,6 +27,62 @@ from globaleaks.utils.fs import directory_traversal_check
 from globaleaks.utils.log import log
 from globaleaks.utils.templating import Templating
 from globaleaks.utils.utility import get_expiration, datetime_now, datetime_never
+from globaleaks.utils.sf_gl import SalesforceGlobaLeaks
+
+
+class RTipInstanceSfSync(OperationHandler):
+    """
+    This interface sync the Receiver's Tip with SF
+    """
+
+    check_roles = 'any'
+
+    def get(self):
+        receiver_id = self.current_user.user_id
+        session = get_session()
+        sf_gl = SalesforceGlobaLeaks()
+        return {
+            'sf_gl_ids': sf_gl._total_gl_records_in_sf(),
+            'total_sf_data': len(sf_gl._total_gl_records_in_sf()),
+            'total_gl_data': session.query(models.ReceiverTip).filter(models.ReceiverTip.receiver_id == receiver_id).count(),
+        }
+
+    def post(self):
+        rtips = self.validate_message(self.request.content.read(), requests.SalesForceSync)
+        rtip_ids = rtips.get('rtips')
+        receiver_id = self.current_user.user_id
+        session = get_session()
+        sf_gl = SalesforceGlobaLeaks()
+        if rtip_ids:
+            for rtip_id in rtips.get('rtips'):
+                tid = self.request.tid
+                user_key = self.current_user.cc
+                # Fetch rtip, internaltip
+                for rtip, itip, answers in session.query(models.ReceiverTip, models.InternalTip,
+                                                         models.InternalTipAnswers).filter(
+                        models.ReceiverTip.receiver_id == receiver_id,
+                        models.InternalTip.id == models.ReceiverTip.internaltip_id,
+                        models.InternalTipAnswers.internaltip_id == models.InternalTip.id,
+                        models.InternalTip.tid == tid,
+                        models.ReceiverTip.id == rtip_id,
+                ):
+                    if itip.crypto_tip_pub_key:
+                        tip_key = GCE.asymmetric_decrypt(user_key, base64.b64decode(rtip.crypto_tip_prv_key))
+                        decrypted_answers = json.loads(
+                            GCE.asymmetric_decrypt(tip_key, base64.b64decode(answers.answers.encode())).decode()
+                        )
+                        gl_answers = {}
+                        for question_id, answer_meta in decrypted_answers.items():
+                            gl_answers[question_id] = answer_meta[0].get('value')
+                        gl_answers['tip_id'] = itip_id = answers.internaltip_id
+                        sf_gl.sync_clients_with_sf(tip_key, decrypted_answers, gl_answers, itip_id)
+                        issue_attachments = db_receiver_get_rfile_list(session, rtip.id)
+                        sf_gl.sync_issues_with_sf(tip_key, decrypted_answers, gl_answers, itip_id, issue_attachments)
+        return {
+            'sf_gl_ids': sf_gl._total_gl_records_in_sf(),
+            'total_sf_data': len(sf_gl._total_gl_records_in_sf()),
+            'total_gl_data': session.query(models.ReceiverTip).filter(models.ReceiverTip.receiver_id == receiver_id).count(),
+        }
 
 
 def db_update_submission_status(session, user_id, itip, status_id, substatus_id):
