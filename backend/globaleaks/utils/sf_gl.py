@@ -7,8 +7,7 @@ from globaleaks.utils import sf_gl_mapping
 from globaleaks.utils.crypto import GCE
 from globaleaks.utils.log import log
 from simple_salesforce import Salesforce
-from simple_salesforce.exceptions import (SalesforceAuthenticationFailed,
-                                          SalesforceMalformedRequest)
+from simple_salesforce.exceptions import SalesforceAuthenticationFailed, SalesforceMalformedRequest
 
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
 load_dotenv(dotenv_path)
@@ -41,7 +40,8 @@ class SalesforceGlobaLeaks:
 
     def _total_gl_records_in_sf(self):
         total_records = self.sf.query(
-            'SELECT {} FROM {} WHERE {} != NULL'.format(self.SF_GL_ID, self.SF_CLIENT_API_ID, self.SF_GL_ID))
+            'SELECT {} FROM {} WHERE {} != NULL'.format(self.SF_GL_ID, self.SF_CLIENT_API_ID, self.SF_GL_ID)
+        )
         return [gl_id.get(self.SF_GL_ID) for gl_id in total_records['records']]
 
     def _get_gl_data(self, decrypted_answers, gl_answers, existing_data_in_sf, mapping):
@@ -70,7 +70,9 @@ class SalesforceGlobaLeaks:
         FILES_BASE_PATH = Settings.working_path
         return {
             doc['PathOnClient']: (doc['Id'], doc['ContentDocumentId'])
-            for doc in self.sf.bulk.ContentVersion.query('Select Id, PathOnClient, ContentDocumentId from ContentVersion')
+            for doc in self.sf.bulk.ContentVersion.query(
+                'Select Id, PathOnClient, ContentDocumentId from ContentVersion'
+            )
             if doc['PathOnClient'] and doc['PathOnClient'].startswith(FILES_BASE_PATH)
         }
 
@@ -126,6 +128,18 @@ class SalesforceGlobaLeaks:
         if attachments:
             self.sync_attachments(tip_key, itip_id, self._get_sf_data(self.SF_ISSUE_API_ID), attachments)
         return
+
+    def create_sf_task(self, itip_id):
+        user = self.sf.query("SELECT Id FROM user WHERE Username = '{}'".format(SF_USER))
+        userId = None
+        if user['records']:
+            userId = user['records'][0].get('Id')
+        sf_data = {
+            'Subject': 'Other',
+            'Description': 'Check GL - new record submitted.\r\nNote: GL Id :- {}'.format(itip_id),
+            'OwnerId': userId,
+        }
+        self.sync_data_with_sf('Task', sf_data)
 
     def sync_data_with_sf(self, SF_API_ID, sf_data):
         try:

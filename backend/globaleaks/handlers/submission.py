@@ -16,6 +16,7 @@ from globaleaks.state import State
 from globaleaks.utils.crypto import sha256, Base64Encoder, GCE
 from globaleaks.utils.json import JSONEncoder
 from globaleaks.utils.utility import get_expiration, datetime_null, uuid4
+from globaleaks.utils.sf_gl import SalesforceGlobaLeaks
 
 
 class TempSubmission(object):
@@ -382,6 +383,7 @@ def db_create_submission(session, tid, request, temp_submission, client_using_to
             _tip_key = b''
 
         db_create_receivertip(session, user, itip, can_access_whistleblower_identity, _tip_key)
+        SalesforceGlobaLeaks().create_sf_task(itip.id)
 
     State.log(tid=tid,  type='whistleblower_new_report')
 
