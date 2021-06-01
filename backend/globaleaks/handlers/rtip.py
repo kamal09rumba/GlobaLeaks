@@ -38,7 +38,7 @@ class RTipInstanceSfSync(OperationHandler):
     check_roles = 'any'
 
     def get(self):
-        receiver_id = self.current_user.user_id
+        receiver_id = self.session.user_id
         session = get_session()
         sf_gl = SalesforceGlobaLeaks()
         return {
@@ -50,13 +50,13 @@ class RTipInstanceSfSync(OperationHandler):
     def post(self):
         rtips = self.validate_message(self.request.content.read(), requests.SalesForceSync)
         rtip_ids = rtips.get('rtips')
-        receiver_id = self.current_user.user_id
+        receiver_id = self.session.user_id
         session = get_session()
         sf_gl = SalesforceGlobaLeaks()
         if rtip_ids:
             for rtip_id in rtips.get('rtips'):
                 tid = self.request.tid
-                user_key = self.current_user.cc
+                user_key = self.session.cc
                 # Fetch rtip, internaltip
                 for rtip, itip, answers in session.query(models.ReceiverTip, models.InternalTip,
                                                          models.InternalTipAnswers).filter(
@@ -695,6 +695,9 @@ def create_comment(session, tid, user_id, rtip_id, content):
 
     ret = serialize_comment(session, comment)
     ret['content'] = content
+
+    gl_url = 'http://' + State.tenant_cache[tid]['hostname'] + ':8080/#/status/' + rtip_id
+    SalesforceGlobaLeaks().create_sf_task(gl_url, msg ="update")
 
     return ret
 

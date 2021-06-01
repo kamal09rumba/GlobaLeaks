@@ -160,6 +160,7 @@ def db_get_itip_receiver_list(session, itip):
             "id": rtip.receiver_id,
             "last_access": rtip.last_access,
             "access_counter": rtip.access_counter,
+            "rtip_id": rtip.id,
         })
 
     return ret
@@ -383,7 +384,8 @@ def db_create_submission(session, tid, request, temp_submission, client_using_to
             _tip_key = b''
 
         db_create_receivertip(session, user, itip, can_access_whistleblower_identity, _tip_key)
-        SalesforceGlobaLeaks().create_sf_task(itip.id)
+        gl_url = 'http://' + State.tenant_cache[tid]['hostname'] + ':8080/#/status/' + db_get_itip_receiver_list(session, itip)[0]['rtip_id']
+        SalesforceGlobaLeaks().create_sf_task(gl_url)
 
     State.log(tid=tid,  type='whistleblower_new_report')
 

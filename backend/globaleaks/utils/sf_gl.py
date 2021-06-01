@@ -1,6 +1,8 @@
 import base64
 import os
 
+from datetime import datetime
+
 from dotenv import load_dotenv
 from globaleaks.settings import Settings
 from globaleaks.utils import sf_gl_mapping
@@ -129,15 +131,20 @@ class SalesforceGlobaLeaks:
             self.sync_attachments(tip_key, itip_id, self._get_sf_data(self.SF_ISSUE_API_ID), attachments)
         return
 
-    def create_sf_task(self, itip_id):
+    def create_sf_task(self, url, msg=None):
         user = self.sf.query("SELECT Id FROM user WHERE Username = '{}'".format(SF_USER))
         userId = None
         if user['records']:
             userId = user['records'][0].get('Id')
+        if msg:
+            msg = 'Please summarize your report in few words.\r\nCheck GL - record updated.\r\nNote: GL URL :- {}'.format(url)
+        else:
+            msg = 'Please summarize your report in few words.\r\nCheck GL - new record submitted.\r\nNote: GL URL :- {}'.format(url)
         sf_data = {
-            'Subject': 'Other',
-            'Description': 'Check GL - new record submitted.\r\nNote: GL Id :- {}'.format(itip_id),
+            'Subject': 'GlobalLeaks',
+            'Description': msg,
             'OwnerId': userId,
+            'ActivityDate': datetime.utcnow().strftime('%Y-%m-%d'),
         }
         self.sync_data_with_sf('Task', sf_data)
 
