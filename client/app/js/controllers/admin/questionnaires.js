@@ -9,6 +9,10 @@ GL.controller("AdminQuestionnaireCtrl",
     {
       title:"Question templates",
       template:"views/admin/questionnaires/questions.html"
+    },
+    {
+      title: "SalesForce mapping",
+      template: "views/admin/questionnaires/sfmapping.html",
     }
   ];
 
@@ -142,4 +146,10 @@ controller("QuestionaireOperationsCtrl",
       });
     }
   };
+}]).controller("AdminSalesForceMappingCtrl",
+  ["$scope", "$http", "$route",
+  function($scope, $http, $route){
+    $scope.headers = ["SalesForce Field ID", "GL Questionnaire ID", "Options"]
+    $scope.client_mapping = $scope.resources.sfmapping.client_mapping;
+    $scope.issue_mapping = $scope.resources.sfmapping.issue_mapping;
 }]);

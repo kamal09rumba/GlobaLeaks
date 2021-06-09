@@ -56,6 +56,15 @@
         <i class="fas fa-sync"></i>
       </span>
 
+      <span data-ng-if="selected_tips.length"
+            id="link-sync-sf"
+            data-ng-click="save_to_sf()"
+            uib-popover-html="sf_gl_record_report"
+            popover-placement="top"
+            class="btn btn-secondary">
+          <i class="fas fa-upload"></i>
+      </span>
+
       <span id="SearchFilter" class="form-group float-right">
         <input type="text" class="form-control" data-ng-attr-placeholder="{{'Search' | translate}}"
                data-ng-model="search">
@@ -163,6 +172,12 @@
               </span>
             </span>
           </th>
+          <th class="TipInfoSalesforceStatus">
+            <span>
+              <i class="fas fa-dot-circle"></i>
+              <span data-translate>SF Sync Status</span>
+            </span>
+          </th>
         </tr>
       </thead>
       <tbody id="tipListTableBody">
@@ -228,6 +243,7 @@
             <span class="badge badge-warning" data-ng-switch-when="2" data-translate>Medium</span>
             <span class="badge badge-danger" data-ng-switch-when="3" data-translate>High</span>
           </td>
+          <td>{{ tip.sf_sync_status }}</td>
         </tr>
       </tbody>
     </table>

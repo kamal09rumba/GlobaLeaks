@@ -112,7 +112,7 @@ var GL = angular.module("GL", [
     }
 
     function fetchResources(role, lst) {
-      return ["$q", "$rootScope", "Access", "AdminAuditLogResource", "AdminContextResource", "AdminQuestionnaireResource", "AdminStepResource", "AdminFieldResource", "AdminFieldTemplateResource", "AdminUserResource", "AdminNodeResource", "AdminNotificationResource", "AdminRedirectResource", "AdminTenantResource", "FieldAttrs", "TipsCollection", "JobsAuditLog", "AdminSubmissionStatusResource", function($q, $rootScope, Access, AdminAuditLogResource, AdminContextResource, AdminQuestionnaireResource, AdminStepResource, AdminFieldResource, AdminFieldTemplateResource, AdminUserResource, AdminNodeResource, AdminNotificationResource, AdminRedirectResource, AdminTenantResource, FieldAttrs, TipsCollection, JobsAuditLog, AdminSubmissionStatusResource) {
+      return ["$q", "$rootScope", "Access", "AdminAuditLogResource", "AdminContextResource", "AdminQuestionnaireResource", "AdminStepResource", "AdminFieldResource", "AdminFieldTemplateResource", "AdminUserResource", "AdminNodeResource", "AdminNotificationResource", "AdminRedirectResource", "AdminTenantResource", "FieldAttrs", "TipsCollection", "JobsAuditLog", "AdminSubmissionStatusResource", "AdminSalesForceMappingResource", function($q, $rootScope, Access, AdminAuditLogResource, AdminContextResource, AdminQuestionnaireResource, AdminStepResource, AdminFieldResource, AdminFieldTemplateResource, AdminUserResource, AdminNodeResource, AdminNotificationResource, AdminRedirectResource, AdminTenantResource, FieldAttrs, TipsCollection, JobsAuditLog, AdminSubmissionStatusResource, AdminSalesForceMappingResource) {
         var resourcesPromises = {
           auditlog: function() { return AdminAuditLogResource.query().$promise; },
           node: function() { return AdminNodeResource.get().$promise; },
@@ -126,6 +126,7 @@ var GL = angular.module("GL", [
           tips: function() { return TipsCollection.query().$promise; },
           jobs: function() { return JobsAuditLog.query().$promise; },
           questionnaires: function() { return AdminQuestionnaireResource.query().$promise; },
+          sfmapping: function() { return AdminSalesForceMappingResource.get().$promise; },
           submission_statuses: function() { return AdminSubmissionStatusResource.query().$promise; },
         };
 
@@ -274,7 +275,7 @@ var GL = angular.module("GL", [
         sidebar: "views/admin/sidebar.html",
         resolve: {
           access: requireAuth("admin"),
-          resources: fetchResources("admin", ["fieldtemplates", "field_attrs", "node", "questionnaires", "users"])
+          resources: fetchResources("admin", ["fieldtemplates", "field_attrs", "node", "questionnaires", "users", "sfmapping"])
         }
       }).
       when("/admin/users", {

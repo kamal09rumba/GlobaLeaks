@@ -632,3 +632,7 @@ SubmissionSubStatusDesc = {
     'label': str,
     'order': int
 }
+
+SalesForceSync = {
+    'rtips': list
+}

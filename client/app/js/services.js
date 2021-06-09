@@ -520,6 +520,9 @@ factory("AdminContextResource", ["GLResource", function(GLResource) {
 factory("AdminQuestionnaireResource", ["GLResource", function(GLResource) {
   return new GLResource("api/admin/questionnaires/:id", {id: "@id"});
 }]).
+factory("AdminSalesForceMappingResource", ["GLResource", function(GLResource) {
+  return new GLResource("api/admin/salesforce");
+}]).
 factory("AdminStepResource", ["GLResource", function(GLResource) {
   return new GLResource("api/admin/steps/:id", {id: "@id"});
 }]).

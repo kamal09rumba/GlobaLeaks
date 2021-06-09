@@ -1,11 +1,39 @@
-GL.controller("ReceiverTipsCtrl", ["$scope",  "$filter", "$http", "$route", "$location", "$uibModal", "$window", "RTipExport", "ReceiverTips", "TokenResource",
-  function($scope, $filter, $http, $route, $location, $uibModal, $window, RTipExport, ReceiverTips, TokenResource) {
+GL.controller("ReceiverTipsCtrl", ["$scope", "$sce",  "$filter", "$http", "$route", "$location", "$uibModal", "$window", "RTipExport", "ReceiverTips", "TokenResource",
+  function($scope, $sce, $filter, $http, $route, $location, $uibModal, $window, RTipExport, ReceiverTips, TokenResource) {
   $scope.search = undefined;
   $scope.currentPage = 1;
   $scope.itemsPerPage = 20;
 
+  $http({
+      method: "GET", url: "api/rtips/sync-with-sf", data: {}
+  }).then(function (response) {
+      let sf_gl_data = response.data;
+      $scope.sf_data = sf_gl_data.sf_gl_ids;
+      $scope.sf_gl_record_report = $sce.trustAsHtml("Sync to SF <div class=\"text-center\">" + "In SF: " + sf_gl_data.total_sf_data + "<br/>In GL: " + sf_gl_data.total_gl_data + "</div>");
+  });
+
+
+  $scope.save_to_sf = function () {
+    $uibModal.open({
+      templateUrl: "views/partials/tip_operation_sync_with_sf.html",
+      controller: "TipBulkOperationsCtrl",
+      resolve: {
+        selected_tips: function () {
+          return $scope.selected_tips;
+        },
+        operation: function() {
+          return "sync-with-sf";
+        }
+      }
+    });
+  };
   $scope.tips = ReceiverTips.query(function(tips) {
     angular.forEach(tips, function (tip) {
+      if ($scope.sf_data.indexOf(tip.id) > -1) {
+          tip.sf_sync_status = "Synced";
+      } else {
+          tip.sf_sync_status = "Not Synced";
+      }
       tip.context = $scope.contexts_by_id[tip.context_id];
       tip.context_name = tip.context.name;
       tip.submissionStatusStr = $scope.Utils.getSubmissionStatusText(tip.status, tip.substatus, $scope.submission_statuses);
@@ -94,8 +122,8 @@ GL.controller("ReceiverTipsCtrl", ["$scope",  "$filter", "$http", "$route", "$lo
     });
   };
 }]).
-controller("TipBulkOperationsCtrl", ["$scope", "$http", "$route", "$location", "$uibModalInstance", "selected_tips", "operation",
-  function ($scope, $http, $route, $location, $uibModalInstance, selected_tips, operation) {
+controller("TipBulkOperationsCtrl", ["$scope", "$sce", "$http", "$route", "$location", "$uibModalInstance", "selected_tips", "operation",
+  function ($scope, $sce, $http, $route, $location, $uibModalInstance, selected_tips, operation) {
   $scope.selected_tips = selected_tips;
   $scope.operation = operation;
 
@@ -106,8 +134,20 @@ controller("TipBulkOperationsCtrl", ["$scope", "$http", "$route", "$location", "
   $scope.confirm = function () {
     $uibModalInstance.close();
 
-    if (["postpone", "delete"].indexOf(operation) === -1) {
+    if (["postpone", "delete", "sync-with-sf"].indexOf(operation) === -1) {
       return;
+    }
+
+    if(operation == "sync-with-sf"){
+      return $http({
+          method: "POST", url: "api/rtips/sync-with-sf", data: {
+              "rtips": $scope.selected_tips
+          }
+      }).then(function (response) {
+          let sf_gl_data = response.data;
+          $scope.sf_data = sf_gl_data.sf_gl_ids;
+          $scope.sf_gl_record_report = $sce.trustAsHtml("Sync to SF <div class=\"text-center\">" + "In SF: " + sf_gl_data.total_sf_data + "<br/>In GL: " + sf_gl_data.total_gl_data + "</div>");
+      });
     }
 
     return $http({method: "PUT", url: "api/recipient/operations", data:{
