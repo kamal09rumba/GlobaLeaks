@@ -18,6 +18,7 @@ from globaleaks.jobs.job import LoopingJob
 from globaleaks.orm import db_del, transact, tw
 from globaleaks.utils.log import log
 from globaleaks.utils.pgp import PGPContext
+from globaleaks.utils.sf_gl import SalesforceGlobaLeaks
 from globaleaks.utils.templating import Templating
 from globaleaks.utils.utility import datetime_now, deferred_sleep
 
@@ -120,6 +121,14 @@ class MailGenerator(object):
 
         for user, rtip, itip, obj in itertools.chain(results1, results2, results3, results4):
             tid = user.tid
+
+            # Create Salesforce Task On Report Activity
+            try:
+                action = 'update' if isinstance(obj, models.Comment) else 'create'
+                rtip_detail_url = self.state.tenant_cache[tid]['hostname'] + '/#/status/' + rtip.id
+                SalesforceGlobaLeaks().create_sf_task(rtip_detail_url, action)
+            except:
+                log.debug("Unable to create task for rtip %s in salesforce", rtip.id)
 
             if (rtips_ids.get(rtip.id, False) or tid in silent_tids) or \
                (isinstance(obj, models.Comment) and obj.type != 'whistleblower' and obj.author_id == user.id) or \
