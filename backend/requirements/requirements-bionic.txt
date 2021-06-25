@@ -13,8 +13,10 @@ pycparser==2.18
 pynacl==1.2
 python_debian==0.1.32
 python_gnupg==0.4.1
+python-dotenv==0.17.0
 requests==2.18.4
 service_identity==16.0.0
+simple-salesforce==1.11.1
 sqlalchemy==1.1.11
 twisted==17.9.0
 txtorcon==0.19.3
